@@ -452,9 +452,11 @@ function loadFail(){lvlHint("Data batas tidak bisa dimuat. Buka halaman lewat Gi
 function loadKec(){if(kecLoading)return;kecLoading=true;lvlHint("Memuat data kecamatan…");
   getJSON("data/kec.json").then(function(a){KEC=a.map(function(k){var u=mk("kec",k[0],k[1],k[2],k[3]);u.kab=kabBy[k[0].slice(0,4)]||locate((u.b[1]+u.b[3])/2,(u.b[0]+u.b[2])/2)||W[0];kecBy[u.c]=u;return u;});
     if(state.lvl==="kec"||state.lvl==="desa")refreshLevel(true);}).catch(function(){kecLoading=false;loadFail();});}
-function loadDesa(w){w.loading=true;
-  getJSON("data/desa/"+w.c+".json").then(function(a){w.desa=a.map(function(d){var u=mk("desa",d[0],d[1],[d[2],d[3],1,null,0,0],d[4]);u.kab=w;u.kel=d[0].charAt(6)==="1";return u;});
-    w.loading=false;if(state.lvl==="desa")refreshLevel(true);}).catch(function(){w.loading=false;w.failed=true;loadFail();});}
+var provP={};
+/* Desa/kelurahan dibundel per provinsi (6 berkas), dimuat saat pertama kali dibutuhkan */
+function loadDesa(w){w.loading=true;var p=w.c.slice(0,2);
+  (provP[p]||(provP[p]=getJSON("data/desa-"+p+".json"))).then(function(all){w.desa=(all[w.c]||[]).map(function(d){var u=mk("desa",d[0],d[1],[d[2],d[3],1,null,0,0],d[4]);u.kab=w;u.kel=d[0].charAt(6)==="1";return u;});
+    w.loading=false;if(state.lvl==="desa")refreshLevel(true);}).catch(function(){provP[p]=null;w.loading=false;w.failed=true;loadFail();});}
 function refreshLevel(force){
   var lv=state.lvl;
   if(lv!=="desa")desaKey="";
